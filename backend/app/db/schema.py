@@ -8,16 +8,16 @@ class Media(Base):
     __tablename__ = 'media'
 
     id = Column(Integer, primary_key=True)
-    title = Column(String)
-    release_date = Column(Date)
+    title = Column(String, nullable=False)
+    release_date = Column(Date, nullable=False)
 
 class Review(Base):
     __tablename__ = 'reviews'
 
     id = Column(Integer, primary_key=True)
-    title = Column(String)
-    description = Column(String)
-    rating = Column(Float)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    rating = Column(Float, nullable=False)
     reviewer_id = Column(Integer, ForeignKey('users.id'))
     media_id = Column(Integer, ForeignKey('media.id'))
 
@@ -30,7 +30,7 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String)
+    username = Column(String, nullable=False)
 
     def __string__(self):
         return  'id: ' + str(self.id) + ', username: ' + str(self.username)
