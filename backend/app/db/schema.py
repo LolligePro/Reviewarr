@@ -14,12 +14,11 @@ class Media(Base):
 class Review(Base):
     __tablename__ = 'reviews'
 
-    id = Column(Integer, primary_key=True)
+    reviewer_id = Column(Integer, ForeignKey('users.id'), primary_key=True, nullable=False)
+    media_id = Column(Integer, ForeignKey('media.id'), primary_key=True, nullable=False)
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
     rating = Column(Float, nullable=False)
-    reviewer_id = Column(Integer, ForeignKey('users.id'))
-    media_id = Column(Integer, ForeignKey('media.id'))
 
     __table_args__ = (CheckConstraint('rating >= 0 AND rating <= 1'),)
 

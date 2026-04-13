@@ -5,6 +5,7 @@ from db import Media, init_db
 router = APIRouter(prefix="/media", tags=["media"])
 session = init_db()
 
+
 # TODO: TEMP, to be replaced by seerr webhooks
 @router.post("/create")
 def create_media(id: int, title: str):
