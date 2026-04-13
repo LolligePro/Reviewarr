@@ -1,0 +1,39 @@
+from sqlalchemy import create_engine, Integer, String, Float, Date, Column, ForeignKey, CheckConstraint
+from sqlalchemy.orm import declarative_base, sessionmaker
+
+engine = create_engine('sqlite:///./reviewarr.db', echo=True)
+Base = declarative_base()
+
+class Media(Base):
+    __tablename__ = 'media'
+
+    id = Column(Integer, primary_key=True)
+    title = Column(String, nullable=False)
+    release_date = Column(Date, nullable=False)
+
+class Review(Base):
+    __tablename__ = 'reviews'
+
+    reviewer_id = Column(Integer, ForeignKey('users.id'), primary_key=True, nullable=False)
+    media_id = Column(Integer, ForeignKey('media.id'), primary_key=True, nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(String, nullable=False)
+    rating = Column(Float, nullable=False)
+
+    __table_args__ = (CheckConstraint('rating >= 0 AND rating <= 1'),)
+
+    def __string__(self):
+        return 'media_id: ' + str(self.media_id) + ', title: ' + self.title + ', rating: ' + str(self.rating) + ', reviewer_id: ' + str(self.reviewer_id)
+
+class User(Base):
+    __tablename__ = 'users'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, nullable=False)
+
+    def __string__(self):
+        return  'id: ' + str(self.id) + ', username: ' + str(self.username)
+
+def init_db():
+    Base.metadata.create_all(engine)
+    return sessionmaker(bind=engine)()

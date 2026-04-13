@@ -1,13 +1,8 @@
 from fastapi import FastAPI
+from routers import user_router, media_router, review_router
 
-api = FastAPI()
+api = FastAPI()  # init FastAPI
 
-
-@api.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-
-@api.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
+api.include_router(user_router)
+api.include_router(media_router)
+api.include_router(review_router)
