@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
@@ -18,7 +19,7 @@ async def request_validation_exception_handler(_: Request, exc: RequestValidatio
 		status_code=422,
 		content={
 			"detail": "Invalid request payload",
-			"errors": exc.errors(),
+			"errors": jsonable_encoder(exc.errors()),
 		},
 	)
 

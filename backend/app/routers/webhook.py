@@ -1,5 +1,9 @@
+import ast
 from datetime import date, datetime
-from fastapi import APIRouter, HTTPException
+from typing import Any
+
+from fastapi import APIRouter, Body, HTTPException
+from pydantic import ValidationError
 from sqlalchemy.exc import IntegrityError
 from db import Media, Review, User, init_db
 from models import JellyfinWebhookPayload
@@ -36,8 +40,40 @@ def _parse_release_date(year_value, timestamp_value) -> date:
     return date(1970, 1, 1)
 
 
+def _coerce_payload(
+    payload: JellyfinWebhookPayload | dict[str, Any] | str | bytes,
+) -> JellyfinWebhookPayload:
+    """Converts the received payload into a JellyfinWebhookPayload"""
+    if isinstance(payload, JellyfinWebhookPayload):
+        return payload
+
+    if isinstance(payload, dict):
+        try:
+            return JellyfinWebhookPayload.model_validate(payload)
+        except ValidationError as exc:
+            raise HTTPException(status_code=422, detail="Invalid webhook payload") from exc
+
+    if isinstance(payload, bytes):
+        raw_text = payload.decode("utf-8", errors="replace")
+    else:
+        raw_text = payload
+
+    try:
+        return JellyfinWebhookPayload.model_validate_json(raw_text)
+    except ValidationError:
+        # Some senders post Python-literal booleans (True/False) instead of strict JSON.
+        try:
+            parsed_payload = ast.literal_eval(raw_text)
+            return JellyfinWebhookPayload.model_validate(parsed_payload)
+        except (ValueError, SyntaxError, ValidationError) as exc:
+            raise HTTPException(status_code=422, detail="Invalid webhook payload") from exc
+
+
 @router.post("/jellyfin")
-def process_jellyfin_webhook(payload: JellyfinWebhookPayload):
+def process_jellyfin_webhook(
+    payload: JellyfinWebhookPayload | dict[str, Any] | str | bytes = Body(...),
+):
+    payload = _coerce_payload(payload)
     session_payload = payload.Session
     if not _as_bool(session_payload.PlayedToCompletion):
         return {"status": "ignored", "reason": "Playback was not completed"}
