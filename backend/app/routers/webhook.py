@@ -2,6 +2,7 @@ from datetime import date, datetime
 from fastapi import APIRouter, HTTPException
 from sqlalchemy.exc import IntegrityError
 from db import Media, Review, User, init_db
+from models import JellyfinWebhookPayload
 
 
 router = APIRouter(prefix="/webhook", tags=["webhook"])
@@ -22,6 +23,9 @@ def _parse_release_date(year_value, timestamp_value) -> date:
         if year.isdigit() and len(year) == 4:
             return date(int(year), 1, 1)
 
+    if isinstance(timestamp_value, datetime):
+        return timestamp_value.date()
+
     if timestamp_value:
         timestamp = str(timestamp_value).strip()
         try:
@@ -33,29 +37,28 @@ def _parse_release_date(year_value, timestamp_value) -> date:
 
 
 @router.post("/jellyfin")
-def process_jellyfin_webhook(payload: dict):
-    session_payload = payload.get("Session") or {}
-    if not _as_bool(session_payload.get("PlayedToCompletion")):
+def process_jellyfin_webhook(payload: JellyfinWebhookPayload):
+    session_payload = payload.Session
+    if not _as_bool(session_payload.PlayedToCompletion):
         return {"status": "ignored", "reason": "Playback was not completed"}
 
-    user_id = str(session_payload.get("UserId") or "").strip()
+    user_id = str(session_payload.UserId or "").strip()
     if not user_id:
         raise HTTPException(status_code=422, detail="Missing Session.UserId")
 
-    username = str(session_payload.get("User") or "").strip() or f"user-{user_id}"
+    username = str(session_payload.User or "").strip() or f"user-{user_id}"
 
-    media_payload = payload.get("Media") or {}
-    external_ids = media_payload.get("ExternalIds") or {}
-    media_id = str(external_ids.get("IMDB") or "").strip()
+    media_payload = payload.Media
+    media_id = str(media_payload.ExternalIds.IMDB or "").strip()
     if not media_id:
         raise HTTPException(status_code=422, detail="Missing Media.ExternalIds.IMDB")
 
     title = (
-        str(media_payload.get("Title") or "").strip()
-        or str(media_payload.get("EpisodeTitle") or "").strip()
+        str(media_payload.Title or "").strip()
+        or str(media_payload.EpisodeTitle or "").strip()
         or "Unknown Title"
     )
-    release_date = _parse_release_date(media_payload.get("Year"), payload.get("Timestamp"))
+    release_date = _parse_release_date(media_payload.Year, payload.Timestamp)
 
     if not session.query(User).where(User.id == user_id).first():
         session.add(User(id=user_id, username=username))
