@@ -2,7 +2,7 @@
 
 ###
 # Negative tests for API input handling.
-# Assumes seed data from `fill_db_dummy_data.http` exists (users 1..4, media 101..105).
+# Assumes seed data from `fill_dummy_db.http` exists (users 1..4, media 101..105).
 
 ### ------------------------------------------------------------
 ### USER endpoint invalid requests
@@ -76,7 +76,8 @@ POST {{baseUrl}}/media/create
 Content-Type: application/json
 
 {
-  "title": "MissingId"
+  "title": "MissingId",
+  "release_date": "2010-07-16"
 }
 
 ### Missing title in body -> expect 422
@@ -84,7 +85,17 @@ POST {{baseUrl}}/media/create
 Content-Type: application/json
 
 {
-  "id": 5000
+  "id": 5000,
+  "release_date": "2010-07-16"
+}
+
+### Missing release_date in body -> expect 422
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "id": 5000,
+  "title": "MissingReleaseDate"
 }
 
 ### Invalid id type -> expect 422
@@ -93,7 +104,18 @@ Content-Type: application/json
 
 {
   "id": "abc",
-  "title": "BadId"
+  "title": "BadId",
+  "release_date": "2010-07-16"
+}
+
+### Invalid release_date format -> expect 422
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "id": 5002,
+  "title": "BadDate",
+  "release_date": "16-07-2010"
 }
 
 ### Duplicate media ID from seed data -> expect 400/409 rejection
@@ -102,7 +124,8 @@ Content-Type: application/json
 
 {
   "id": 101,
-  "title": "InceptionDuplicate"
+  "title": "InceptionDuplicate",
+  "release_date": "2010-07-16"
 }
 
 ### Whitespace-only title (should ideally be rejected) -> expect 4xx
@@ -111,7 +134,8 @@ Content-Type: application/json
 
 {
   "id": 5001,
-  "title": "   "
+  "title": "   ",
+  "release_date": "2010-07-16"
 }
 
 ### ------------------------------------------------------------

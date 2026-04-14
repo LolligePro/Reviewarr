@@ -1,4 +1,5 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Path
+from sqlalchemy.exc import IntegrityError
 from db import Review, User, Media, init_db
 from models import ReviewModel, ReviewCreateModel, ReviewUpdateModel
 
@@ -20,12 +21,20 @@ def create_review(review: ReviewCreateModel):
 
     db_review = Review(**review.model_dump())
     session.add(db_review)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="Request violates database constraints") from exc
     return db_review
 
 
 @router.post("/update", response_model=ReviewModel)
 def update_review(review: ReviewUpdateModel):
+    update_data = review.model_dump(exclude_unset=True, exclude={"media_id", "reviewer_id"})
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields provided to update")
+
     db_review = session.query(Review).where(
         Review.media_id == review.media_id,
         Review.reviewer_id == review.reviewer_id,
@@ -33,15 +42,19 @@ def update_review(review: ReviewUpdateModel):
     if not db_review:
         raise HTTPException(status_code=404, detail="Review does not exist")
 
-    for field, value in review.model_dump(exclude_unset=True, exclude={"media_id", "reviewer_id"}).items():
+    for field, value in update_data.items():
         setattr(db_review, field, value)
 
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="Request violates database constraints") from exc
     return db_review
 
 
 @router.get("/get/{media_id}/{reviewer_id}", response_model=ReviewModel)
-def get_review(media_id: int, reviewer_id: int):
+def get_review(media_id: int = Path(..., ge=1), reviewer_id: int = Path(..., ge=1)):
     db_review = session.query(Review).where(
         Review.media_id == media_id,
         Review.reviewer_id == reviewer_id,
@@ -52,7 +65,7 @@ def get_review(media_id: int, reviewer_id: int):
 
 
 @router.delete("/delete/{media_id}/{reviewer_id}", response_model=ReviewModel)
-def delete_review(media_id: int, reviewer_id: int):
+def delete_review(media_id: int = Path(..., ge=1), reviewer_id: int = Path(..., ge=1)):
     db_review = session.query(Review).where(
         Review.media_id == media_id,
         Review.reviewer_id == reviewer_id,
@@ -60,5 +73,9 @@ def delete_review(media_id: int, reviewer_id: int):
     if not db_review:
         raise HTTPException(status_code=404, detail="Review does not exist")
     session.delete(db_review)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="Request violates database constraints") from exc
     return db_review

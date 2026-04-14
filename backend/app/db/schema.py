@@ -18,9 +18,9 @@ class Review(Base):
     media_id = Column(Integer, ForeignKey('media.id'), primary_key=True, nullable=False)
     title = Column(String, nullable=False)
     description = Column(String, nullable=False)
-    rating = Column(Float, nullable=False)
+    rating = Column(Float, nullable=True)
 
-    __table_args__ = (CheckConstraint('rating >= 0 AND rating <= 1'),)
+    __table_args__ = (CheckConstraint('rating IS NULL OR (rating >= 0 AND rating <= 1)'),)
 
     def __string__(self):
         return 'media_id: ' + str(self.media_id) + ', title: ' + self.title + ', rating: ' + str(self.rating) + ', reviewer_id: ' + str(self.reviewer_id)

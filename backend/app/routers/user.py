@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Path
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
 from db import User, init_db
 from models import UserModel, UserCreateModel, UserUpdateModel
@@ -14,25 +15,37 @@ def create_user(user: UserCreateModel):
     new_id = max_id + 1
     db_user = User(id=new_id, **user.model_dump())
     session.add(db_user)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="Request violates database constraints") from exc
     return db_user
 
 
 @router.post("/update", response_model=UserModel)
 def update_user(user: UserUpdateModel):
+    update_data = user.model_dump(exclude_unset=True, exclude={"id"})
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields provided to update")
+
     db_user = session.query(User).where(user.id == User.id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User does not exist")
 
-    for field, value in user.model_dump(exclude_unset=True).items():
+    for field, value in update_data.items():
         setattr(db_user, field, value)
 
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="Request violates database constraints") from exc
     return db_user
 
 
 @router.get("/get/{id}", response_model=UserModel)
-def get_user(id: int):
+def get_user(id: int = Path(..., ge=1)):
     db_user = session.query(User).where(id == User.id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User does not exist")
@@ -40,10 +53,14 @@ def get_user(id: int):
 
 
 @router.delete("/delete/{id}", response_model=UserModel)
-def delete_user(id: int):
+def delete_user(id: int = Path(..., ge=1)):
     db_user = session.query(User).where(id == User.id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User does not exist")
     session.delete(db_user)
-    session.commit()
+    try:
+        session.commit()
+    except IntegrityError as exc:
+        session.rollback()
+        raise HTTPException(status_code=409, detail="Request violates database constraints") from exc
     return db_user

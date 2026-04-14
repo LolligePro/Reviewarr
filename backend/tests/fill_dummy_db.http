@@ -37,19 +37,54 @@ Content-Type: application/json
 }
 
 ### Create media (movies)
-POST {{baseUrl}}/media/create?id=101&title=Inception
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "id": 101,
+  "title": "Inception",
+  "release_date": "2010-07-16"
+}
 
 ###
-POST {{baseUrl}}/media/create?id=102&title=The%20Matrix
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "id": 102,
+  "title": "The Matrix",
+  "release_date": "1999-03-31"
+}
 
 ###
-POST {{baseUrl}}/media/create?id=103&title=Interstellar
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "id": 103,
+  "title": "Interstellar",
+  "release_date": "2014-11-07"
+}
 
 ###
-POST {{baseUrl}}/media/create?id=104&title=Spirited%20Away
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "id": 104,
+  "title": "Spirited Away",
+  "release_date": "2001-07-20"
+}
 
 ###
-POST {{baseUrl}}/media/create?id=105&title=Parasite
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "id": 105,
+  "title": "Parasite",
+  "release_date": "2019-05-30"
+}
 
 ### Create reviews
 # reviewer_id values assume user IDs were assigned in creation order above (1..4).
