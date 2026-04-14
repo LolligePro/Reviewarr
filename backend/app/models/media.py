@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 from datetime import date
 
 class MediaCreateModel(BaseModel):
-    id: int = Field(..., ge=1, description='ID of the media item')
+    id: str = Field(..., min_length=1, description='ID of the media item')
     title: str = Field(..., min_length=1, description='Title of the media item')
     release_date: date = Field(..., description='Date of release of the media item')
 

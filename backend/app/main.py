@@ -2,13 +2,14 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from sqlalchemy.exc import IntegrityError
-from routers import user_router, media_router, review_router
+from routers import user_router, media_router, review_router, webhook_router
 
 api = FastAPI()  # init FastAPI
 
 api.include_router(user_router)
 api.include_router(media_router)
 api.include_router(review_router)
+api.include_router(webhook_router)
 
 
 @api.exception_handler(RequestValidationError)

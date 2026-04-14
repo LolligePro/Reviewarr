@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Path
-from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
+from uuid import uuid4
 
 from db import User, init_db
 from models import UserModel, UserCreateModel, UserUpdateModel
@@ -11,9 +11,7 @@ session = init_db()
 
 @router.post("/create", response_model=UserModel)
 def create_user(user: UserCreateModel):
-    max_id = session.query(func.max(User.id)).scalar() or 0
-    new_id = max_id + 1
-    db_user = User(id=new_id, **user.model_dump())
+    db_user = User(id=str(uuid4()), **user.model_dump())
     session.add(db_user)
     try:
         session.commit()
@@ -45,7 +43,7 @@ def update_user(user: UserUpdateModel):
 
 
 @router.get("/get/{id}", response_model=UserModel)
-def get_user(id: int = Path(..., ge=1)):
+def get_user(id: str = Path(..., min_length=1)):
     db_user = session.query(User).where(id == User.id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User does not exist")
@@ -53,7 +51,7 @@ def get_user(id: int = Path(..., ge=1)):
 
 
 @router.delete("/delete/{id}", response_model=UserModel)
-def delete_user(id: int = Path(..., ge=1)):
+def delete_user(id: str = Path(..., min_length=1)):
     db_user = session.query(User).where(id == User.id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User does not exist")

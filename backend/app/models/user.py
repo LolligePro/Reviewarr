@@ -22,12 +22,12 @@ class UserCreateModel(UserBaseModel):
 
 
 class UserModel(UserBaseModel):
-    id: int = Field(..., ge=1, description='ID of the user')
+    id: str = Field(..., min_length=1, description='ID of the user')
 
 
 class UserUpdateModel(BaseModel):
     # all optional except id
-    id: int = Field(..., ge=1, description='ID of the user')
+    id: str = Field(..., min_length=1, description='ID of the user')
     username: Optional[str] = Field(None, description='Username of the user')
 
     @field_validator('username')

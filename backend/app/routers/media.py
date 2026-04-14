@@ -1,5 +1,4 @@
 from fastapi import APIRouter, HTTPException
-from datetime import date
 from sqlalchemy.exc import IntegrityError
 from db import Media, init_db
 from models import MediaCreateModel

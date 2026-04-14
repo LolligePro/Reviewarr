@@ -54,7 +54,7 @@ def update_review(review: ReviewUpdateModel):
 
 
 @router.get("/get/{media_id}/{reviewer_id}", response_model=ReviewModel)
-def get_review(media_id: int = Path(..., ge=1), reviewer_id: int = Path(..., ge=1)):
+def get_review(media_id: str = Path(..., min_length=1), reviewer_id: str = Path(..., min_length=1)):
     db_review = session.query(Review).where(
         Review.media_id == media_id,
         Review.reviewer_id == reviewer_id,
@@ -65,7 +65,7 @@ def get_review(media_id: int = Path(..., ge=1), reviewer_id: int = Path(..., ge=
 
 
 @router.delete("/delete/{media_id}/{reviewer_id}", response_model=ReviewModel)
-def delete_review(media_id: int = Path(..., ge=1), reviewer_id: int = Path(..., ge=1)):
+def delete_review(media_id: str = Path(..., min_length=1), reviewer_id: str = Path(..., min_length=1)):
     db_review = session.query(Review).where(
         Review.media_id == media_id,
         Review.reviewer_id == reviewer_id,
