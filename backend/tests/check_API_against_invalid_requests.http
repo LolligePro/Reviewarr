@@ -1,0 +1,237 @@
+@baseUrl = http://127.0.0.1:8000
+
+###
+# Negative tests for API input handling.
+# Assumes seed data from `fill_db_dummy_data.http` exists (users 1..4, media 101..105).
+
+### ------------------------------------------------------------
+### USER endpoint invalid requests
+### ------------------------------------------------------------
+
+### Missing required field (username) -> expect 422
+POST {{baseUrl}}/user/create
+Content-Type: application/json
+
+{}
+
+### Wrong type for username -> expect 422
+POST {{baseUrl}}/user/create
+Content-Type: application/json
+
+{
+  "username": 12345
+}
+
+### Empty body -> expect 422
+POST {{baseUrl}}/user/create
+Content-Type: application/json
+
+
+### Invalid path parameter type -> expect 422
+GET {{baseUrl}}/user/get/not-an-int
+
+### Update without id -> expect 422
+POST {{baseUrl}}/user/update
+Content-Type: application/json
+
+{
+  "username": "newname"
+}
+
+### Update with invalid id type -> expect 422
+POST {{baseUrl}}/user/update
+Content-Type: application/json
+
+{
+  "id": "abc",
+  "username": "newname"
+}
+
+### Update non-existing user -> expect 404
+POST {{baseUrl}}/user/update
+Content-Type: application/json
+
+{
+  "id": 9999,
+  "username": "ghost-user"
+}
+
+### Delete non-existing user -> expect 404
+DELETE {{baseUrl}}/user/delete/9999
+
+### Update with only id (no updatable fields) -> expect 400
+POST {{baseUrl}}/user/update
+Content-Type: application/json
+
+{
+  "id": 1
+}
+
+### ------------------------------------------------------------
+### MEDIA endpoint invalid requests
+### ------------------------------------------------------------
+
+### Missing id in body -> expect 422
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "title": "MissingId"
+}
+
+### Missing title in body -> expect 422
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "id": 5000
+}
+
+### Invalid id type -> expect 422
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "id": "abc",
+  "title": "BadId"
+}
+
+### Duplicate media ID from seed data -> expect 400/409 rejection
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "id": 101,
+  "title": "InceptionDuplicate"
+}
+
+### Whitespace-only title (should ideally be rejected) -> expect 4xx
+POST {{baseUrl}}/media/create
+Content-Type: application/json
+
+{
+  "id": 5001,
+  "title": "   "
+}
+
+### ------------------------------------------------------------
+### REVIEW endpoint invalid requests
+### ------------------------------------------------------------
+
+### Missing required fields -> expect 422
+POST {{baseUrl}}/review/create
+Content-Type: application/json
+
+{
+  "title": "Incomplete review"
+}
+
+### Invalid rating (too high) -> expect 422
+POST {{baseUrl}}/review/create
+Content-Type: application/json
+
+{
+  "title": "Over max rating",
+  "description": "Should fail validation",
+  "rating": 1.2,
+  "media_id": 101,
+  "reviewer_id": 1
+}
+
+### Invalid rating (negative) -> expect 422
+POST {{baseUrl}}/review/create
+Content-Type: application/json
+
+{
+  "title": "Negative rating",
+  "description": "Should fail validation",
+  "rating": -0.1,
+  "media_id": 101,
+  "reviewer_id": 1
+}
+
+### Wrong type for rating -> expect 422
+POST {{baseUrl}}/review/create
+Content-Type: application/json
+
+{
+  "title": "Bad type",
+  "description": "Rating is string",
+  "rating": "great",
+  "media_id": 101,
+  "reviewer_id": 1
+}
+
+### Non-existing reviewer -> expect 404
+POST {{baseUrl}}/review/create
+Content-Type: application/json
+
+{
+  "title": "Unknown reviewer",
+  "description": "FK-like check",
+  "rating": 0.7,
+  "media_id": 101,
+  "reviewer_id": 9999
+}
+
+### Non-existing media -> expect 404
+POST {{baseUrl}}/review/create
+Content-Type: application/json
+
+{
+  "title": "Unknown media",
+  "description": "FK-like check",
+  "rating": 0.7,
+  "media_id": 9999,
+  "reviewer_id": 1
+}
+
+### Duplicate review from seed data (101,1) -> expect 409
+POST {{baseUrl}}/review/create
+Content-Type: application/json
+
+{
+  "title": "Duplicate check",
+  "description": "Should be rejected if seed exists",
+  "rating": 0.8,
+  "media_id": 101,
+  "reviewer_id": 1
+}
+
+### Invalid path parameter type -> expect 422
+GET {{baseUrl}}/review/get/101/not-an-int
+
+### Get non-existing review -> expect 404
+GET {{baseUrl}}/review/get/105/4
+
+### Update missing composite key fields -> expect 422
+POST {{baseUrl}}/review/update
+Content-Type: application/json
+
+{
+  "title": "No identifiers"
+}
+
+### Update non-existing review -> expect 404
+POST {{baseUrl}}/review/update
+Content-Type: application/json
+
+{
+  "media_id": 105,
+  "reviewer_id": 4,
+  "title": "Should not exist",
+  "rating": 0.6
+}
+
+### Update with no mutable fields -> expect 400
+POST {{baseUrl}}/review/update
+Content-Type: application/json
+
+{
+  "media_id": 101,
+  "reviewer_id": 1
+}
+
+### Delete non-existing review -> expect 404
+DELETE {{baseUrl}}/review/delete/105/4
+

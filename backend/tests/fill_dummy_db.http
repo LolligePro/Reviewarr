@@ -1,0 +1,84 @@
+@baseUrl = http://127.0.0.1:8000
+
+###
+# Seed script for a freshly reset DB.
+# Run top-to-bottom: users -> media -> reviews.
+
+### Create users
+POST {{baseUrl}}/user/create
+Content-Type: application/json
+
+{
+  "username": "alice"
+}
+
+###
+POST {{baseUrl}}/user/create
+Content-Type: application/json
+
+{
+  "username": "bob"
+}
+
+###
+POST {{baseUrl}}/user/create
+Content-Type: application/json
+
+{
+  "username": "charlie"
+}
+
+###
+POST {{baseUrl}}/user/create
+Content-Type: application/json
+
+{
+  "username": "diana"
+}
+
+### Create media (movies)
+POST {{baseUrl}}/media/create?id=101&title=Inception
+
+###
+POST {{baseUrl}}/media/create?id=102&title=The%20Matrix
+
+###
+POST {{baseUrl}}/media/create?id=103&title=Interstellar
+
+###
+POST {{baseUrl}}/media/create?id=104&title=Spirited%20Away
+
+###
+POST {{baseUrl}}/media/create?id=105&title=Parasite
+
+### Create reviews
+# reviewer_id values assume user IDs were assigned in creation order above (1..4).
+POST {{baseUrl}}/review/create
+Content-Type: application/json
+
+{
+  "title": "Mind-bending classic",
+  "description": "Excellent pacing, visuals, and soundtrack.",
+  "rating": 0.95,
+  "media_id": 101,
+  "reviewer_id": 1
+}
+
+###
+POST {{baseUrl}}/review/create
+Content-Type: application/json
+
+{
+  "title": "Still amazing",
+  "description": "The action and ideas hold up very well.",
+  "rating": 0.9,
+  "media_id": 102,
+  "reviewer_id": 2
+}
+
+### Optional sanity checks
+GET {{baseUrl}}/user/get/1
+
+###
+GET {{baseUrl}}/review/get/101/1
+
