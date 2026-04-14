@@ -7,7 +7,6 @@ router = APIRouter(prefix="/media", tags=["media"])
 session = init_db()
 
 
-# TODO: TEMP, to be replaced by seerr webhooks
 @router.post("/create")
 def create_media(media: MediaCreateModel):
     if session.query(Media).where(Media.id == media.id).first():
